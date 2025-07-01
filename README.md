@@ -18,4 +18,4 @@ https://github.com/driftregion/iso14229/releases/tag/v0.8.1
 This project forked libdoip project and used it as the basis, then added iso14229 project's v0.8.1 release files.
 Fixed some errors and added glue logic to integrate two projects together.
 
-The original libdoip README file has been renamed to README.libdoip.
+The original libdoip README file has been renamed to README.libdoip.md.
