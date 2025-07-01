@@ -1,6 +1,6 @@
 CXX = g++
 
-CPPFLAGS = -g -Wall -Wextra -std=c++11 -fsanitize=address
+CPPFLAGS = -g -Wall -Wextra -std=c++11 
 LDFLAGS = -shared
 TESTFLAGS = -g -L/usr/lib -lgtest -lgtest_main -lpthread
 
@@ -9,6 +9,7 @@ INCPATH = include
 BUILDPATH = build
 TESTPATH = test
 EXAMPLEPATH = examples
+UDSDOIPPATH = UdsDoIPServer
 
 COMMONTARGET = libdoipcommon
 SERVERTARGET = libdoipserver
@@ -29,10 +30,12 @@ SERVEROBJS = $(patsubst $(SERVERTARGET)/$(SRCPATH)/%.cpp, $(BUILDPATH)/%.o, $(SE
 CLIENTOBJS = $(patsubst $(CLIENTTARGET)/$(SRCPATH)/%.cpp, $(BUILDPATH)/%.o, $(CLIENTSOURCE))
 
 EXAMPLESERVERSOURCE = $(EXAMPLEPATH)/exampleDoIPServer.cpp
+UDSDOIPSERVERSOURCE = $(UDSDOIPPATH)/UdsDoIPServer.cpp
+UDSSOURCE = $(UDSDOIPPATH)/iso14229.c
 
 .PHONY: all clean
 
-all: env $(BUILDPATH)/$(COMMONTARGET).so $(BUILDPATH)/$(SERVERTARGET).so $(BUILDPATH)/$(CLIENTTARGET).so test examples
+all: env $(BUILDPATH)/$(COMMONTARGET).so $(BUILDPATH)/$(SERVERTARGET).so $(BUILDPATH)/$(CLIENTTARGET).so test examples udsdoip
 
 env:
 	mkdir -p $(BUILDPATH)
@@ -41,7 +44,7 @@ clean:
 	rm -rf $(BUILDPATH)/* 
 
 $(BUILDPATH)/%.o: $(COMMONTARGET)/$(SRCPATH)/%.cpp
-	$(CXX) $(CPPFLAGS) -I $(COMMONTARGET)/$(INCPATH) -fPIC -c $< -o $@
+	$(CXX) $(CPPFLAGS) -I $(COMMONTARGET)/$(INCPATH) -I $(SERVERTARGET)/$(INCPATH) -fPIC -c $< -o $@
 	
 $(BUILDPATH)/%.o: $(SERVERTARGET)/$(SRCPATH)/%.cpp
 	$(CXX) $(CPPFLAGS) -I $(SERVERTARGET)/$(INCPATH) -I $(COMMONTARGET)/$(INCPATH) -fPIC -c $< -o $@
@@ -60,11 +63,19 @@ $(BUILDPATH)/$(CLIENTTARGET).so: $(CLIENTOBJS)
 	
 test:
 	$(CXX) $(CPPFLAGS) -I $(COMMONTARGET)/$(INCPATH) -I $(SERVERTARGET)/$(INCPATH) -I $(CLIENTTARGET)/$(INCPATH) $(COMMONSOURCE) $(SERVERSOURCE) $(CLIENTSOURCE) -o runTest $(TESTSOURCE) $(TESTFLAGS) 
-	
+
 examples: $(BUILDPATH)/exampleDoIPServer
+
+udsdoip: $(BUILDPATH)/iso14229 $(BUILDPATH)/UdsDoIPServer
 
 $(BUILDPATH)/exampleDoIPServer: $(EXAMPLESERVERSOURCE)
 	$(CXX) $(CPPFLAGS) -I $(COMMONTARGET)/$(INCPATH) -I $(SERVERTARGET)/$(INCPATH) -o $@ $^ -ldoipserver -ldoipcommon -lpthread -L$(BUILDPATH)
+
+$(BUILDPATH)/iso14229: $(UDSSOURCE)
+	gcc -c -o $@.o $^
+
+$(BUILDPATH)/UdsDoIPServer: $(UDSDOIPSERVERSOURCE)
+	$(CXX) $(CPPFLAGS) -I $(COMMONTARGET)/$(INCPATH) -I $(SERVERTARGET)/$(INCPATH) -o $@ $^ $(BUILDPATH)/iso14229.o -ldoipserver -ldoipcommon -lpthread -L$(BUILDPATH)
 
 install:
 	install -d /usr/lib/libdoip
