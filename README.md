@@ -3,12 +3,12 @@ Integration of Unified Diagnostic Services (UDS) and Diagnostics over IP (DoIP)
 
 ### Projects been integrated
 
-1. libdoip
+1. [libdoip](https://github.com/AVL-DiTEST-DiagDev/libdoip/tree/dev)
 ```
 https://github.com/AVL-DiTEST-DiagDev/libdoip/tree/dev
 ```
 
-2. iso14229
+2. [iso14229](https://github.com/driftregion/iso14229/tree/v0.8.1)
 ```
 https://github.com/driftregion/iso14229/releases/tag/v0.8.1
 ```
