@@ -4,6 +4,10 @@
 
 using namespace std;
 
+extern "C" {
+extern unsigned char tcp_recv_buf[], tcp_send_buf[];
+}
+
 /**
  * Checks if the received Generic Header is valid
  * @param data          message which was received
@@ -142,7 +146,8 @@ GenericHeaderAction parseGenericHeader(unsigned char* data, int dataLenght) {
  * @return          header array
  */
 unsigned char* createGenericHeader(PayloadType type, uint32_t length) {
-    unsigned char *header = new unsigned char[8 + length];
+    // unsigned char *header = new unsigned char[8 + length];
+    unsigned char *header = tcp_send_buf;
     header[0] = 0x02;
     header[1] = 0xFD;
     switch(type) {

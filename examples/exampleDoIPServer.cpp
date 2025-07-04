@@ -8,6 +8,10 @@ using namespace std;
 
 static const unsigned short LOGICAL_ADDRESS = 0x28;
 
+#define BUFFER_SIZE  (4096 + 12)
+unsigned char tcp_recv_buf[BUFFER_SIZE];
+unsigned char tcp_send_buf[BUFFER_SIZE];
+
 DoIPServer server;
 unique_ptr<DoIPConnection> connection(nullptr);
 std::vector<std::thread> doipReceiver;

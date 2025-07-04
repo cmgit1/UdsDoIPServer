@@ -2,12 +2,19 @@
 #include <iostream>
 #include <cstring>
 
+using namespace std;
+
+extern "C" {
+extern unsigned char tcp_recv_buf[], tcp_send_buf[];
+}
+
 /**
  * Checks if a received Diagnostic Message is valid
  * @param cb                    callback which will be called with the user data
  * @param sourceAddress		currently registered source address on the socket
  * @param data			message which was received
  * @param diagMessageLength     length of the diagnostic message
+ * @return      DoIP diagnostic message ACK/NACK code (However, the return value never be used)
  */
 unsigned char parseDiagnosticMessage(DiagnosticCallback callback, unsigned char sourceAddress [2],
                                     unsigned char* data, int diagMessageLength) {
@@ -26,7 +33,8 @@ unsigned char parseDiagnosticMessage(DiagnosticCallback callback, unsigned char 
         target_address |= (unsigned short)data[3];
 
         int cb_message_length = diagMessageLength - _DiagnosticMessageMinimumLength;
-        unsigned char* cb_message = new unsigned char[cb_message_length];
+        // unsigned char* cb_message = new unsigned char[cb_message_length];
+        unsigned char* cb_message = &(tcp_recv_buf[12]);
 
         for(int i = _DiagnosticMessageMinimumLength; i < diagMessageLength; i++) {
             cb_message[i - _DiagnosticMessageMinimumLength] = data[i];

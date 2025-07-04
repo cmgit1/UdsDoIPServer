@@ -19,7 +19,7 @@
 
 using CloseConnectionCallback = std::function<void()>;
 
-const unsigned long _MaxDataSize = 0xFFFFFF;
+const unsigned long _MaxDataSize = 0x0ffff;
 
 class DoIPConnection {
 
@@ -40,7 +40,6 @@ public:
 
     void setCallback(DiagnosticCallback dc, DiagnosticMessageNotification dmn, CloseConnectionCallback ccb);                       
     void setGeneralInactivityTime(const uint16_t seconds);   
-
 private:
 
     int tcpSocket;
@@ -50,7 +49,7 @@ private:
     CloseConnectionCallback close_connection;
     DiagnosticMessageNotification notify_application;
 
-    unsigned char* routedClientAddress;
+    unsigned char routedClientAddress[2];
     unsigned short logicalGatewayAddress = 0x0000;
         
     void closeSocket();

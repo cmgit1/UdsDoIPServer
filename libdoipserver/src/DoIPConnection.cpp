@@ -2,6 +2,12 @@
 
 #include <iostream>
 #include <iomanip>
+#include <sys/time.h>
+#include <sys/select.h>
+
+extern "C" {
+extern unsigned char tcp_recv_buf[], tcp_send_buf[];
+}
 
 /**
  * Closes the connection by closing the sockets
@@ -26,17 +32,31 @@ void DoIPConnection::closeSocket() {
  *              or -1 if error occurred     
  */
 int DoIPConnection::receiveTcpMessage() {
+    fd_set rfds;
+    struct timeval tv;
+    FD_ZERO(&rfds);
+    FD_SET(tcpSocket, &rfds);
+    tv.tv_sec = 0;
+    
+    tv.tv_usec = 1000;  // timeout is 1ms
+    if (!tcpSocket) return -1;
+    int ret = select(tcpSocket + 1, &rfds, NULL, NULL, &tv);
+    if(0 >= ret) {
+        return -1;
+    }
+
     std::cout << "Waiting for DoIP Header..." << std::endl;
-    unsigned char genericHeader[_GenericHeaderLength];
+    // unsigned char genericHeader[_GenericHeaderLength];
+    unsigned char *genericHeader = tcp_recv_buf;
     unsigned int readBytes = receiveFixedNumberOfBytesFromTCP(_GenericHeaderLength, genericHeader);
     if(readBytes == _GenericHeaderLength && !aliveCheckTimer.timeout) {
         std::cout << "Received DoIP Header." << std::endl;
         GenericHeaderAction doipHeaderAction = parseGenericHeader(genericHeader, _GenericHeaderLength);
 
-        unsigned char *payload = nullptr;
+        unsigned char *payload = &(tcp_recv_buf[_GenericHeaderLength]);
         if(doipHeaderAction.payloadLength > 0) {
             std::cout << "Waiting for " << doipHeaderAction.payloadLength << " bytes of payload..." << std::endl;
-            payload = new unsigned char[doipHeaderAction.payloadLength];
+            // payload = new unsigned char[doipHeaderAction.payloadLength];
             unsigned int receivedPayloadBytes = receiveFixedNumberOfBytesFromTCP(doipHeaderAction.payloadLength, payload);
             if(receivedPayloadBytes != doipHeaderAction.payloadLength) {
                 closeSocket();
@@ -122,7 +142,7 @@ int DoIPConnection::reactOnReceivedTcpMessage(GenericHeaderAction action, unsign
                 return -1;
             } else {
                 //Routing Activation Request was successfull, save address of the client
-                routedClientAddress = new unsigned char[2];
+                // routedClientAddress = new unsigned char[2];
                 routedClientAddress[0] = payload[0];
                 routedClientAddress[1] = payload[1];
 
@@ -194,8 +214,8 @@ void DoIPConnection::setGeneralInactivityTime(uint16_t seconds) {
 /*
  * Send diagnostic message payload to the client
  * @param sourceAddress   logical source address (i.e. address of this server)
- * @param value     received payload
- * @param length    length of received payload
+ * @param value      payload to send
+ * @param length    length of payload to send
  */
 void DoIPConnection::sendDiagnosticPayload(unsigned short sourceAddress, unsigned char* data, int length) {
 

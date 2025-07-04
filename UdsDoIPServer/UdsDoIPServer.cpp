@@ -1,5 +1,6 @@
 #include "DoIPServer.h"
 #include "iso14229.h"
+#include "uds_doip_app_interfaces.h"
 
 #include<iostream>
 #include<iomanip>
@@ -7,16 +8,19 @@
 
 using namespace std;
 
-static const unsigned short LOGICAL_ADDRESS = 0x28;
-
 DoIPServer server;
+UDSTp_t tp_doip;
+UDSServer_t uds_srv;
 unique_ptr<DoIPConnection> connection(nullptr);
 std::vector<std::thread> doipReceiver;
 bool serverActive = false;
 
+void DoIPServerSendDiagnosticPayload(unsigned short sourceAddress, unsigned char* data, int length) {
+    connection->sendDiagnosticPayload(SERVER_LOGICAL_ADDRESS, data, length);
+}
 /**
  * Is called when the doip library receives a diagnostic message.
- * @param address   logical address of the ecu
+ * @param address   logical address of the ECU sending the diagnostic message
  * @param data      message which was received
  * @param length    length of the message
  */
@@ -27,24 +31,14 @@ void ReceiveFromLibrary(unsigned short address, unsigned char* data, int length)
     }
     cout << endl;
 
-    if(length > 2 && data[0] == 0x22)  {
-        cout << "-> Send diagnostic message positive response" << endl;
-        unsigned char responseData[] = { 0x62, data[1], data[2], 0x01, 0x02, 0x03, 0x04};
-        connection->sendDiagnosticPayload(LOGICAL_ADDRESS, responseData, sizeof(responseData));
-    } else {
-        cout << "-> Send diagnostic message negative response" << endl;
-        unsigned char responseData[] = { 0x7F, data[0], 0x11};
-        connection->sendDiagnosticPayload(LOGICAL_ADDRESS, responseData, sizeof(responseData));
-    }
-
-
+    recv_uds_len = length;
 }
 
 /**
- * Will be called when the doip library receives a diagnostic message.
- * The library notifies the application about the message.
- * Checks if there is a ecu with the logical address
- * @param targetAddress     logical address to the ecu
+ * The DoIP library code will call this function when it receives a DoIP diagnostic message.
+ * The library notifies the application(i.e., the server code in our case) about the message.
+ * The application(i.e., the server code in our case) checks if the target address is equal to this server's logical address
+ * @param targetAddress     logical address to the targeted ecu
  * @return                  If a positive or negative ACK should be send to the client
  */
 bool DiagnosticMessageReceived(unsigned short targetAddress) {
@@ -56,7 +50,7 @@ bool DiagnosticMessageReceived(unsigned short targetAddress) {
     //send positiv ack
     ackCode = 0x00;
     cout << "-> Send positive diagnostic message ack" << endl;
-    connection->sendDiagnosticAck(LOGICAL_ADDRESS, true, ackCode);
+    connection->sendDiagnosticAck(SERVER_LOGICAL_ADDRESS, true, ackCode);
 
     return true;
 }
@@ -91,7 +85,10 @@ void listenTcp() {
         connection->setCallback(ReceiveFromLibrary, DiagnosticMessageReceived, CloseConnection);
         connection->setGeneralInactivityTime(50000);
 
+        InitializeUDSServer(&uds_srv, &tp_doip);
+
          while(connection->isSocketActive()) {
+            UDSServerPoll(&uds_srv);
              connection->receiveTcpMessage();
          }
     }
@@ -101,7 +98,7 @@ void ConfigureDoipServer() {
     // VIN needs to have a fixed length of 17 bytes.
     // Shorter VINs will be padded with '0'
     server.setVIN("FOOBAR");
-    server.setLogicalGatewayAddress(LOGICAL_ADDRESS);
+    server.setLogicalGatewayAddress(SERVER_LOGICAL_ADDRESS);
     server.setGID(0);
     server.setFAR(0);
     server.setEID(0);

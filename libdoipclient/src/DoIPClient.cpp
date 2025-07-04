@@ -107,6 +107,8 @@ void DoIPClient::sendRoutingActivationRequest() {
         
     const std::pair <int,unsigned char*>* rareqWithLength=buildRoutingActivationRequest();
     write(_sockFd,rareqWithLength->second,rareqWithLength->first);    
+    delete[] rareqWithLength->second;
+    delete rareqWithLength;
 }
 
 /**
@@ -245,6 +247,9 @@ void DoIPClient::sendVehicleIdentificationRequest(const char* address){
     
     int sendError = sendto(_sockFd_udp, rareqWithLength->second,rareqWithLength->first, 0, (struct sockaddr *) &_serverAddr, sizeof(_serverAddr));
     
+    delete[] rareqWithLength->second;
+    delete rareqWithLength;
+   
     if(sendError > 0)
     {
         std::cout << "Sending Vehicle Identification Request" << std::endl;
