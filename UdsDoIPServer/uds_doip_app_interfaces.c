@@ -67,6 +67,9 @@ int udsServerCallback(UDSServer_t *srv, UDSEvent_t ev, void *arg) {
     case UDS_EVT_ReadDataByIdent:
         ret = readDidDataToSendBuffer(srv, arg);
         break;
+    case UDS_EVT_WriteDataByIdent:
+        ret = writeDidDataAndResponse(srv, arg);
+        break;
     default:
         printf("Unhandled event: %d\n", ev);
         ret = UDS_NRC_GeneralReject;
