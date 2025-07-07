@@ -16,7 +16,7 @@ std::vector<std::thread> doipReceiver;
 bool serverActive = false;
 
 void DoIPServerSendDiagnosticPayload(unsigned short sourceAddress, unsigned char* data, int length) {
-    connection->sendDiagnosticPayload(SERVER_LOGICAL_ADDRESS, data, length);
+    connection->sendDiagnosticPayload(sourceAddress, data, length);
 }
 /**
  * Is called when the doip library receives a diagnostic message.
@@ -97,7 +97,7 @@ void listenTcp() {
 void ConfigureDoipServer() {
     // VIN needs to have a fixed length of 17 bytes.
     // Shorter VINs will be padded with '0'
-    server.setVIN("FOOBAR");
+    server.setVIN("VECT0RVEH1CLE0001");
     server.setLogicalGatewayAddress(SERVER_LOGICAL_ADDRESS);
     server.setGID(0);
     server.setFAR(0);
