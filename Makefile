@@ -38,7 +38,7 @@ UDSDOIPSERVERSOURCE = $(UDSDOIPTARGET)/UdsDoIPServer.cpp
 
 .PHONY: all clean
 
-all: env $(BUILDPATH)/$(COMMONTARGET).so $(BUILDPATH)/$(SERVERTARGET).so $(BUILDPATH)/$(CLIENTTARGET).so test examples udsdoip
+all: env $(BUILDPATH)/$(COMMONTARGET).so $(BUILDPATH)/$(SERVERTARGET).so $(BUILDPATH)/$(CLIENTTARGET).so udsdoip
 
 env:
 	mkdir -p $(BUILDPATH)
