@@ -1994,8 +1994,8 @@ uint32_t UDSMillis(void) {
 #endif
 
 bool UDSSecurityAccessLevelIsReserved(uint8_t securityLevel) {
-    securityLevel &= 0x3f;
-    return (0 == securityLevel || (0x43 <= securityLevel && securityLevel >= 0x5E) ||
+    securityLevel &= 0x7f;
+    return (0 == securityLevel || (0x43 <= securityLevel && securityLevel <= 0x5E) ||
             0x7F == securityLevel);
 }
 
